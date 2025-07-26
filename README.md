@@ -2,7 +2,7 @@
 
 
 ## 📊 Project Overview
-**Bank Statement Parser** is a python project that automates the extraction of Bank trascation statement and convert it into a structured Excel spreadsheet.
+**Bank Statement Parser** is a python project that automates the extraction of Bank transaction  statement and convert it into a structured Excel spreadsheet.
 It is designed for individual and businesses who need to digitize and analyze financial record quickly.
 
 
