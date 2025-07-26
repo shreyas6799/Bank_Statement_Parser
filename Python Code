@@ -1,0 +1,94 @@
+This is the Python code I wrote to solve the problem.
+
+import fitz                                                         # PyMuPDF
+import pandas as pd
+import re
+
+def Extract_From_PDF(pdf_path):
+    
+    doc = fitz.open(pdf_path)
+    lines = []
+    
+    # Flatten all lines from all pages
+    
+    for page in doc:
+        lines.extend(page.get_text().split('\n'))
+    return  lines
+
+def Combined_lines(lines):
+    combined = []
+    buffer = ''
+    
+    for line in lines:
+        if re.match(r'^\d{2}/\d{2}/\d{4}', line):
+            if buffer:
+                combined.append(buffer.strip())
+            buffer = line.strip()
+            
+        else:
+            buffer += ' '+ line.strip()
+    
+    if buffer:   
+        combined.append(buffer.strip())
+    return combined
+
+def Extracted_Data(combined):
+    data = []
+    for excel in combined:
+        dat = re.match(r'\d{2}/\d{2}/\d{4}', excel)
+        if dat:
+            date = dat.group()                                              # For dates  
+            all_other = excel[dat.end():]                                   # All the other detail except for date after date
+            transaction_id = all_other.strip().split()[0]                   # What is after the date 
+            old_amount =  re.search(r'(\d+\.\d{2})\s+\((Dr|Cr)\)', excel)
+        
+            if len(transaction_id) > 6:                                     # For transaction which has the length of 6 or more
+
+                try:
+                    amount = old_amount.group() 
+                    
+                    if 'Dr'in amount:
+                        debit = amount
+                        credit = '0'
+                
+                    if 'Cr'in amount:
+                        debit = '0'
+                        credit = amount
+                    
+                    
+                    data.append({"Date":date,
+                                 "Transaction ID":transaction_id,
+                                 "Debit":debit,
+                                 "Credit":credit
+                               })
+            
+                except AttributeError:
+                    print("Old amount is None")
+                    debit = credit = '0'
+                
+                # print(date, trascation_id, debit, credit)
+
+    return data
+
+def export_to_excel(data,output_file):
+    df = pd.DataFrame(data)
+    print(df)
+    df.to_excel(output_file, index=False)
+    print("Balance sheet is successfully converted to Excel ✅")
+
+def main():
+    pdf_path = "Statement_XXXX XXXX 5820_18Jul2025_21_07.pdf"
+
+    lines = Extract_From_PDF(pdf_path)
+
+    combined = Combined_lines(lines)
+
+    data = Extracted_Data(combined)
+
+    output_file = "Account Balance sheet Excel.xlsx"
+    
+    export_to_excel(data,output_file)
+
+
+if __name__ == "__main__":                                               
+    main()
